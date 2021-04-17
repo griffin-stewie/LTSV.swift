@@ -39,7 +39,7 @@ final class LTSVDecoderTests: XCTestCase {
 
     static var allTests = [
         ("testLTSVDecodeSingleRow", testLTSVDecodeSingleRow),
-        ("testLTSVDecodeSingleRow", testLTSVDecodeSingleRow),
+        ("testLTSVDecodeRows", testLTSVDecodeRows),
     ]
 }
 

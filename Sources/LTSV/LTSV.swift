@@ -31,4 +31,18 @@ internal extension LTSV {
 
         return parsedLines
     }
+
+    static func covertToString(from container: [[String: String]]) -> String {
+        var output = ""
+
+        for dict in container {
+            for (key, value) in dict {
+                print(key, value, separator: ":", terminator: "\t", to: &output)
+            }
+            output.removeLast()
+            print("", to: &output)
+        }
+
+        return output.trimmingCharacters(in: .newlines)
+    }
 }
