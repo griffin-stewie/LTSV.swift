@@ -13,6 +13,16 @@ final class LTSVTests: XCTestCase {
         XCTAssertEqual(dict["label2"]!, "value2")
     }
 
+    func testLTSVParseTheEmptyValueFieldAsNil() {
+        let string = "label1:\tlabel2:value2"
+        let dict = LTSV.parse(row: string)
+
+        XCTAssertEqual(dict.keys.count, 2)
+        XCTAssertEqual(dict.values.count, 2)
+        XCTAssertNil(dict["label1"]!)
+        XCTAssertEqual(dict["label2"]!, "value2")
+    }
+
     static var allTests = [
         ("testLTSVParse", testLTSVParse),
     ]

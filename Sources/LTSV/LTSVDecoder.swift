@@ -35,18 +35,18 @@ private class _LTSVDecoder: Decoder {
     }
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        guard let dict = self.storage.topContainer as? [String: String] else {
+        guard let dict = self.storage.topContainer as? [String: String?] else {
             let description = "Expected to decode xxxxx"
-            throw DecodingError.typeMismatch([String: String].self, .init(codingPath: codingPath, debugDescription: description))
+            throw DecodingError.typeMismatch([String: String?].self, .init(codingPath: codingPath, debugDescription: description))
         }
 
         return KeyedDecodingContainer(LTSVKeyedDecodingContainer<Key>(referencing: self, wrapping: dict))
     }
 
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        guard let array = self.storage.topContainer as? [[String: String]] else {
+        guard let array = self.storage.topContainer as? [[String: String?]] else {
             let description = "Expected to decode xxxxx"
-            throw DecodingError.typeMismatch([[String: String]].self, .init(codingPath: codingPath, debugDescription: description))
+            throw DecodingError.typeMismatch([[String: String?]].self, .init(codingPath: codingPath, debugDescription: description))
         }
 
         return LTSVUnkeyedDecodingContainer(referencing: self, parsedArray: array)
@@ -74,16 +74,16 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
 
     private let decoder: _LTSVDecoder
 
-    var container: [String: String]
+    var container: [String: String?]
 
-    fileprivate init(referencing decoder: _LTSVDecoder, wrapping container: [String : String]) {
+    fileprivate init(referencing decoder: _LTSVDecoder, wrapping container: [String : String?]) {
         self.decoder = decoder
         self.container = container
         self.codingPath = decoder.codingPath
     }
 
     func contains(_ key: Key) -> Bool {
-        fatalError("not implemented")
+        return container[key.stringValue] != nil
     }
 
     func decodeNil(forKey key: Key) throws -> Bool {
@@ -95,6 +95,14 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
     }
 
     func decode(_ type: String.Type, forKey key: Key) throws -> String {
+        guard let v = self.container[key.stringValue]?.flatMap({$0}) else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "TODO"))
+        }
+
+        return v
+    }
+
+    func decodeIfPresent(_ type: String.Type, forKey key: Self.Key) throws -> String? {
         guard let v = self.container[key.stringValue] else {
             throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "TODO"))
         }
@@ -187,9 +195,9 @@ private struct LTSVUnkeyedDecodingContainer: UnkeyedDecodingContainer {
 
     var currentIndex: Int
 
-    var parsedArray: [[String: String]]
+    var parsedArray: [[String: String?]]
 
-    fileprivate init(referencing decoder: _LTSVDecoder, parsedArray: [[String: String]]) {
+    fileprivate init(referencing decoder: _LTSVDecoder, parsedArray: [[String: String?]]) {
         self.decoder = decoder
         self.parsedArray = parsedArray
         self.codingPath = decoder.codingPath

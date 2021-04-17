@@ -37,6 +37,21 @@ final class LTSVDecoderTests: XCTestCase {
         XCTAssertEqual(model2.label2, "value4")
     }
 
+    func testLTSVDecodeRowsTheEmptyValueFieldAsNil() throws {
+        struct Model: Codable {
+            let label1: String?
+            let label2: String?
+        }
+
+        let string = "label1:\tlabel2:value2"
+
+        let decoder = LTSVDecoder()
+        let model = try decoder.decode(Model.self, from: string)
+
+        XCTAssertNil(model.label1)
+        XCTAssertEqual(model.label2!, "value2")
+    }
+
     static var allTests = [
         ("testLTSVDecodeSingleRow", testLTSVDecodeSingleRow),
         ("testLTSVDecodeRows", testLTSVDecodeRows),
