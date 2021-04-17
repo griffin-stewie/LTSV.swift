@@ -24,5 +24,6 @@ let package = Package(
         .testTarget(
             name: "LTSVTests",
             dependencies: ["LTSV"]),
-    ]
+    ],
+    swiftLanguageVersions: [.v5]
 )
