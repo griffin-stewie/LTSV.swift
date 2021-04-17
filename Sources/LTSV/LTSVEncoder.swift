@@ -62,7 +62,7 @@ fileprivate class _LTSVEncoder: Encoder {
     }
 
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        fatalError("not implemented")
+        return _LTSVUnkeyedEncodingContainer(referencing: self, codingPath: self.codingPath)
     }
 
     func singleValueContainer() -> SingleValueEncodingContainer {
@@ -168,7 +168,97 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     mutating func superEncoder(forKey key: Key) -> Encoder {
         fatalError("not implemented")
     }
+}
 
+fileprivate struct _LTSVUnkeyedEncodingContainer : UnkeyedEncodingContainer {
+    private let encoder: _LTSVEncoder
+
+    private(set) public var codingPath: [CodingKey]
+
+    var count: Int {
+        return self.encoder.storage.count
+    }
+
+    fileprivate init(referencing encoder: _LTSVEncoder, codingPath: [CodingKey]) {
+        self.encoder = encoder
+        self.codingPath = codingPath
+    }
+
+    mutating func encodeNil() throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: Bool) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: String) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: Double) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: Float) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: Int) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: Int8) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: Int16) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: Int32) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: Int64) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: UInt) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: UInt8) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: UInt16) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: UInt32) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode(_ value: UInt64) throws {
+        fatalError("not implemented")
+    }
+
+    mutating func encode<T>(_ value: T) throws where T : Encodable {
+        try value.encode(to: self.encoder)
+    }
+
+    mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
+        fatalError("not implemented")
+    }
+
+    mutating func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
+        fatalError("not implemented")
+    }
+
+    mutating func superEncoder() -> Encoder {
+        fatalError("not implemented")
+    }
 }
 
 //// MARK: - Encoding Storage and Containers
