@@ -29,6 +29,15 @@ public struct LTSV {
     }
 }
 
+public extension LTSV {
+    static let dateFormatter: DateFormatter = {
+        var formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "[dd/MMM/yyyy:HH:mm:ss Z]"
+        return formatter
+    }()
+}
+
 internal extension LTSV {
     static func parseAny(from string: String) -> Any {
         let parsedLines: [[String: String?]] = self.parse(from: string)
