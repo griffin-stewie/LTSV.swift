@@ -12,9 +12,17 @@ public final class LTSVDecoder {
 
     public var userInfo: [CodingUserInfoKey : Any] = [:]
 
+    fileprivate struct _Options {
+        let userInfo: [CodingUserInfoKey : Any]
+    }
+
+    fileprivate var options: _Options {
+        return _Options(userInfo: userInfo)
+    }
+
     public func decode<T : Decodable>(_ type: T.Type, from string: String) throws -> T {
         let topLevel = LTSV.parseAny(from: string)
-        let decoder = _LTSVDecoder(referencing: topLevel)
+        let decoder = _LTSVDecoder(referencing: topLevel, options: options)
         return try T(from: decoder)
     }
 }
@@ -24,14 +32,19 @@ private class _LTSVDecoder: Decoder {
 
     fileprivate var storage: _LTSVDecodingStorage
 
+    fileprivate let options: LTSVDecoder._Options
+
     public var codingPath: [CodingKey]
 
-    public var userInfo: [CodingUserInfoKey : Any] = [:]
+    public var userInfo: [CodingUserInfoKey : Any] {
+        return self.options.userInfo
+    }
 
-    fileprivate init(referencing container: Any, at codingPath: [CodingKey] = []) {
+    fileprivate init(referencing container: Any, at codingPath: [CodingKey] = [], options: LTSVDecoder._Options) {
         self.storage = _LTSVDecodingStorage()
         self.storage.push(container: container)
         self.codingPath = codingPath
+        self.options = options
     }
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
