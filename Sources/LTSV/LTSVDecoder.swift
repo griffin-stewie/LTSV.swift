@@ -10,14 +10,45 @@ import Foundation
 
 public final class LTSVDecoder {
 
+    /// The strategy to use for decoding `Date` values.
+    public enum DateDecodingStrategy {
+        /// Defer to `Date` for decoding. This is the default strategy.
+        case deferredToDate
+
+        /// Decode the `Date` as a UNIX timestamp from a JSON number.
+        case secondsSince1970
+
+        /// Decode the `Date` as UNIX millisecond timestamp from a JSON number.
+        case millisecondsSince1970
+
+        /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
+        @available(OSX 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
+        case iso8601
+
+        /// Decode the `Date` as a string parsed by the given formatter.
+        case formatted(DateFormatter)
+
+        /// Decode the `Date` as a custom value decoded by the given closure.
+        case custom((_ value: String) throws -> Date)
+    }
+
     public var userInfo: [CodingUserInfoKey : Any] = [:]
 
+    /// The strategy to use in decoding dates. Defaults to `.deferredToDate`.
+    public var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
+
+    /// Options set on the top-level encoder to pass down the decoding hierarchy.
     fileprivate struct _Options {
+        let dateDecodingStrategy: DateDecodingStrategy
         let userInfo: [CodingUserInfoKey : Any]
     }
 
+    /// The options set on the top-level decoder.
     fileprivate var options: _Options {
-        return _Options(userInfo: userInfo)
+        return _Options(
+            dateDecodingStrategy: dateDecodingStrategy,
+            userInfo: userInfo
+        )
     }
 
     public func decode<T : Decodable>(_ type: T.Type, from string: String) throws -> T {
@@ -491,3 +522,16 @@ fileprivate struct _LTSVDecodingStorage {
         self.containers.removeLast()
     }
 }
+
+//===----------------------------------------------------------------------===//
+// Shared ISO8601 Date Formatter
+//===----------------------------------------------------------------------===//
+// NOTE: This value is implicitly lazy and _must_ be lazy.
+// We're compiled against the latest SDK (w/ ISO8601DateFormatter), but linked against whichever Foundation the user has.
+// ISO8601DateFormatter might not exist, so we better not hit this code path on an older OS.
+@available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
+fileprivate var _iso8601Formatter: ISO8601DateFormatter = {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = .withInternetDateTime
+    return formatter
+}()
