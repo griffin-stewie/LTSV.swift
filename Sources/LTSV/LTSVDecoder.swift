@@ -119,7 +119,23 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
     }
 
     func decode(_ type: Int.Type, forKey key: Key) throws -> Int {
-        fatalError("not implemented")
+        guard let s = self.container[key.stringValue]?.flatMap({$0}), let v = Int(s) else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "TODO"))
+        }
+
+        return v
+    }
+
+    func decodeIfPresent(_ type: Int.Type, forKey key: Key) throws -> Int? {
+        guard let s = self.container[key.stringValue] else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "TODO"))
+        }
+
+        guard let unwrapped = s, let v = Int(unwrapped) else {
+            return nil
+        }
+
+        return v
     }
 
     func decode(_ type: Int8.Type, forKey key: Key) throws -> Int8 {
