@@ -161,14 +161,21 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
 
     mutating func encode(_ value: String, forKey key: Key) throws {
         var dict = self.encoder.storage.popContainer()
-        dict.updateValue(value, forKey: key.stringValue)
-        self.encoder.storage.push(container: dict)
+        defer { self.encoder.storage.push(container: dict) }
+
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: String?, forKey key: Self.Key) throws {
         var dict = self.encoder.storage.popContainer()
-        dict.updateValue(value, forKey: key.stringValue)
-        self.encoder.storage.push(container: dict)
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: Double, forKey key: Key) throws {
@@ -180,43 +187,183 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    mutating func encodeIfPresent(_ value: Int?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: Int8, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    mutating func encodeIfPresent(_ value: Int8?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: Int16, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    mutating func encodeIfPresent(_ value: Int16?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: Int32, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    func encodeIfPresent(_ value: Int32?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: Int64, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    mutating func encodeIfPresent(_ value: Int64?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: UInt, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    mutating func encodeIfPresent(_ value: UInt?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: UInt8, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    mutating func encodeIfPresent(_ value: UInt8?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: UInt16, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    mutating func encodeIfPresent(_ value: UInt16?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: UInt32, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    mutating func encodeIfPresent(_ value: UInt32?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: UInt64, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    mutating func encodeIfPresent(_ value: UInt64?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
@@ -331,3 +478,20 @@ fileprivate struct _LTSVUnkeyedEncodingContainer : UnkeyedEncodingContainer {
     }
 }
 
+// MARK: - Concrete Value Representations
+
+extension _LTSVEncoder {
+    /// Returns the given value boxed in a container appropriate for pushing onto the container stack.
+//    fileprivate func box(_ value: Bool)   -> String { return NSNumber(value: value) }
+    fileprivate func box(_ value: Int)    -> String { return String(value) }
+    fileprivate func box(_ value: Int8)   -> String { return String(value) }
+    fileprivate func box(_ value: Int16)  -> String { return String(value) }
+    fileprivate func box(_ value: Int32)  -> String { return String(value) }
+    fileprivate func box(_ value: Int64)  -> String { return String(value) }
+    fileprivate func box(_ value: UInt)   -> String { return String(value) }
+    fileprivate func box(_ value: UInt8)  -> String { return String(value) }
+    fileprivate func box(_ value: UInt16) -> String { return String(value) }
+    fileprivate func box(_ value: UInt32) -> String { return String(value) }
+    fileprivate func box(_ value: UInt64) -> String { return String(value) }
+    fileprivate func box(_ value: String) -> String { return value }
+}
