@@ -26,6 +26,9 @@ public final class LTSVDecoder {
         @available(OSX 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
         case iso8601
 
+        /// Nginx $time_local This is the default strategy.
+        case nginxTimeLocal
+
         /// Decode the `Date` as a string parsed by the given formatter.
         case formatted(DateFormatter)
 
@@ -198,7 +201,7 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
     }
 
     func decodeNil(forKey key: Key) throws -> Bool {
-        fatalError("not implemented")
+        return self.container[key.stringValue] != nil
     }
 
     func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool {
@@ -559,7 +562,21 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
 
 
     func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
-        fatalError("not implemented")
+        guard let s = self.container[key.stringValue] else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "No value associated with key \(key) (\"\(key.stringValue)\")."))
+        }
+
+        guard let entry = s else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "No value associated with key \(key) (\"\(key.stringValue)\")."))
+        }
+
+        return try self.decoder.with(pushedKey: key) {
+            guard let value = try self.decoder.unbox(entry, as: T.self) else {
+                throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "Expected \(type) value but found null instead."))
+            }
+
+            return value
+        }
     }
 
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -719,7 +736,11 @@ extension _LTSVDecoder : SingleValueDecodingContainer {
     }
 
     func decode(_ type: Double.Type) throws -> Double {
-        fatalError("not implemented")
+        guard let value = try self.unbox(self.storage.topContainer, as: Double.self) else {
+            fatalError("")
+        }
+
+        return value
     }
 
     func decode(_ type: Float.Type) throws -> Float {
@@ -775,10 +796,87 @@ extension _LTSVDecoder : SingleValueDecodingContainer {
 // MARK: - Concrete Value Representations
 
 private extension _LTSVDecoder {
+    func unbox(_ value: Any, as type: String.Type) throws -> String? {
+        guard let string = value as? String else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        }
+
+        return string
+    }
+
+    func unbox(_ value: Any, as type: Double.Type) throws -> Double? {
+        guard let string = value as? String else { return nil }
+        guard let double = Double(string) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        }
+        return double
+    }
+
+    func unbox(_ value: Any, as type: Date.Type) throws -> Date? {
+        guard !(value is NSNull) else { return nil }
+
+        switch self.options.dateDecodingStrategy {
+        case .deferredToDate:
+            self.storage.push(container: value)
+            let date = try Date(from: self)
+            self.storage.popContainer()
+            return date
+
+        case .secondsSince1970:
+            let double = try self.unbox(value, as: Double.self)!
+            return Date(timeIntervalSince1970: double)
+
+        case .millisecondsSince1970:
+            let double = try self.unbox(value, as: Double.self)!
+            return Date(timeIntervalSince1970: double / 1000.0)
+
+        case .iso8601:
+            if #available(OSX 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
+                let string = try self.unbox(value, as: String.self)!
+                guard let date = _iso8601Formatter.date(from: string) else {
+                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted."))
+                }
+
+                return date
+            } else {
+                fatalError("ISO8601DateFormatter is unavailable on this platform.")
+            }
+
+        case .nginxTimeLocal:
+            let string = try self.unbox(value, as: String.self)!
+            guard let date = LTSV.dateFormatter.date(from: string) else {
+                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Expected date string to be ISO8601-formatted."))
+            }
+
+            return date
+
+
+        case .formatted(let formatter):
+            let string = try self.unbox(value, as: String.self)!
+            guard let date = formatter.date(from: string) else {
+                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Date string does not match format expected by formatter."))
+            }
+
+            return date
+
+        case .custom(let closure):
+            self.storage.push(container: value)
+            let date = try closure(try self.unbox(value, as: String.self)!)
+            self.storage.popContainer()
+            return date
+        }
+    }
+
     func unbox<T : Decodable>(_ value: Any, as type: T.Type) throws -> T? {
-        self.storage.push(container: value)
-        let decoded = try T(from: self)
-        self.storage.popContainer()
+        let decoded: T
+        if T.self == Date.self {
+            guard let date = try self.unbox(value, as: Date.self) else { return nil }
+            decoded = date as! T
+        } else {
+            self.storage.push(container: value)
+            decoded = try T(from: self)
+            self.storage.popContainer()
+        }
 
         return decoded
     }
@@ -799,7 +897,7 @@ fileprivate var _iso8601Formatter: ISO8601DateFormatter = {
 }()
 
 internal extension DecodingError {
-    internal static func _typeMismatch(at path: [CodingKey], expectation: Any.Type, reality: Any) -> DecodingError {
+    static func _typeMismatch(at path: [CodingKey], expectation: Any.Type, reality: Any) -> DecodingError {
         let description = "Expected to decode \(expectation) but found \(reality) instead."
         return .typeMismatch(expectation, DecodingError.Context(codingPath: path, debugDescription: description))
     }
