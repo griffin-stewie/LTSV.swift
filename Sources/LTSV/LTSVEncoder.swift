@@ -10,15 +10,25 @@ import Foundation
 
 public final class LTSVEncoder {
 
-    public var userInfo: [CodingUserInfoKey : Any] = [:]
+    /// Contextual user-provided information for use during encoding.
+    var userInfo: [CodingUserInfoKey : Any] = [:]
 
+    /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
         let userInfo: [CodingUserInfoKey : Any]
     }
 
+    /// The options set on the top-level encoder.
     fileprivate var options: _Options {
         return _Options(userInfo: userInfo)
     }
+
+    // MARK: - Constructing a LTSV Encoder
+
+    /// Initializes `self` with default strategies.
+    public init() {}
+
+    // MARK: - Encoding Values
 
     public func encode<T : Encodable>(_ value: T) throws -> String {
         let encoder = _LTSVEncoder(options: self.options)
@@ -31,6 +41,8 @@ public final class LTSVEncoder {
         return LTSV.covertToString(from: encoder.storage.containers)
     }
 }
+
+// MARK: - _LTSVEncoder
 
 fileprivate class _LTSVEncoder: Encoder {
     // MARK: Properties
@@ -48,16 +60,33 @@ fileprivate class _LTSVEncoder: Encoder {
     /// Options set on the top-level encoder.
     fileprivate let options: LTSVEncoder._Options
 
+    // MARK: - Initialization
+
     fileprivate init(options: LTSVEncoder._Options, codingPath: [CodingKey] = []) {
         self.options = options
         self.storage = _LTSVEncodingStorage()
         self.codingPath = codingPath
     }
 
+    // MARK: - Coding Path Operations
+
+    /// Performs the given closure with the given key pushed onto the end of the current coding path.
+    ///
+    /// - parameter key: The key to push. May be nil for unkeyed containers.
+    /// - parameter work: The work to perform with the key in the path.
+    fileprivate func with<T>(pushedKey key: CodingKey, _ work: () throws -> T) rethrows -> T {
+        self.codingPath.append(key)
+        let ret: T = try work()
+        self.codingPath.removeLast()
+        return ret
+    }
+
+    // MARK: - Encoder Methods
+
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let topContainer: [String: String] = [:]
+        let topContainer: [String: String?] = [:]
         self.storage.push(container: topContainer)
-        let container = _LTSVKeyedEncodingContainer<Key>(referencing: self, codingPath: self.codingPath)
+        let container = _LTSVKeyedEncodingContainer<Key>(referencing: self, codingPath: self.codingPath, wrapping: topContainer)
         return KeyedEncodingContainer(container)
     }
 
@@ -68,12 +97,46 @@ fileprivate class _LTSVEncoder: Encoder {
     func singleValueContainer() -> SingleValueEncodingContainer {
         fatalError("not implemented")
     }
-
 }
+
+// MARK: - Encoding Storage and Containers
+
+fileprivate struct _LTSVEncodingStorage {
+    // MARK: Properties
+
+    /// The container stack.
+    /// Elements
+    private(set) fileprivate var containers: [[String: String?]] = []
+
+    // MARK: - Initialization
+
+    /// Initializes `self` with no containers.
+    fileprivate init() {}
+
+    // MARK: - Modifying the Stack
+
+    fileprivate var count: Int {
+        return self.containers.count
+    }
+
+    fileprivate mutating func push(container: [String: String?]) {
+        self.containers.append(container)
+    }
+
+    fileprivate mutating func popContainer() -> [String: String?] {
+        precondition(self.containers.count > 0, "Empty container stack.")
+        return self.containers.popLast()!
+    }
+}
+
+// MARK: - Encoding Containers
 
 fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncodingContainerProtocol {
     /// A reference to the encoder we're writing to.
     private let encoder: _LTSVEncoder
+
+    /// A reference to the container we're writing to.
+    private var container: [String: String?]
 
     /// The path of coding keys taken to get to this point in encoding.
     private(set) public var codingPath: [CodingKey]
@@ -81,9 +144,10 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     // MARK: - Initialization
 
     /// Initializes `self` with the given references.
-    fileprivate init(referencing encoder: _LTSVEncoder, codingPath: [CodingKey]) {
+    fileprivate init(referencing encoder: _LTSVEncoder, codingPath: [CodingKey], wrapping container: [String: String?]) {
         self.encoder = encoder
         self.codingPath = codingPath
+        self.container = container
     }
 
 
@@ -97,7 +161,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
 
     mutating func encode(_ value: String, forKey key: Key) throws {
         var dict = self.encoder.storage.popContainer()
-        dict[key.stringValue] = value
+        dict.updateValue(value, forKey: key.stringValue)
+        self.encoder.storage.push(container: dict)
+    }
+
+    mutating func encodeIfPresent(_ value: String?, forKey key: Self.Key) throws {
+        var dict = self.encoder.storage.popContainer()
+        dict.updateValue(value, forKey: key.stringValue)
         self.encoder.storage.push(container: dict)
     }
 
@@ -261,32 +331,3 @@ fileprivate struct _LTSVUnkeyedEncodingContainer : UnkeyedEncodingContainer {
     }
 }
 
-//// MARK: - Encoding Storage and Containers
-
-fileprivate struct _LTSVEncodingStorage {
-    // MARK: Properties
-
-    /// The container stack.
-    /// Elements
-    private(set) fileprivate var containers: [[String: String]] = []
-
-    // MARK: - Initialization
-
-    /// Initializes `self` with no containers.
-    fileprivate init() {}
-
-    // MARK: - Modifying the Stack
-
-    fileprivate var count: Int {
-        return self.containers.count
-    }
-
-    fileprivate mutating func push(container: [String: String]) {
-        self.containers.append(container)
-    }
-
-    fileprivate mutating func popContainer() -> [String: String] {
-        precondition(self.containers.count > 0, "Empty container stack.")
-        return self.containers.popLast()!
-    }
-}

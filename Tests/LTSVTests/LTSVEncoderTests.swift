@@ -47,9 +47,30 @@ final class LTSVEncoderTests: XCTestCase {
         XCTAssertEqual(models, decodedModels)
     }
 
+    func testLTSVEncodeRowsTheEmptyValueFieldAsNil() throws {
+        struct Model: Codable, Equatable {
+            let label1: String?
+            let label2: String?
+        }
+
+        let models = [
+            Model(label1: nil, label2: "value2"),
+            Model(label1: nil, label2: nil),
+        ]
+
+        let encoder = LTSVEncoder()
+        let result = try encoder.encode(models)
+
+        let decoder = LTSVDecoder()
+        let decodedModels = try decoder.decode([Model].self, from: result)
+
+        XCTAssertEqual(models, decodedModels)
+    }
+
     static var allTests = [
         ("testLTSVEncodeSingleRow", testLTSVEncodeSingleRow),
-//        ("testLTSVEncodeRows", testLTSVEncodeRows),
+        ("testLTSVEncodeRows", testLTSVEncodeRows),
+        ("testLTSVEncodeRowsTheEmptyValueFieldAsNil", testLTSVEncodeRowsTheEmptyValueFieldAsNil),
     ]
 }
 
