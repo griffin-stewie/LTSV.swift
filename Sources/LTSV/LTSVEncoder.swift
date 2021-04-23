@@ -9,18 +9,51 @@
 import Foundation
 
 public final class LTSVEncoder {
+    // MARK: Options
+
+    /// The strategy to use for decoding `Date` values.
+    public enum DateEncodingStrategy {
+        /// Defer to `Date` for decoding. This is the default strategy.
+        case deferredToDate
+
+        /// Decode the `Date` as a UNIX timestamp from a number.
+        case secondsSince1970
+
+        /// Decode the `Date` as UNIX millisecond timestamp from a number.
+        case millisecondsSince1970
+
+        /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
+        @available(OSX 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
+        case iso8601
+
+        /// Nginx $time_local This is the default strategy.
+        case nginxTimeLocal
+
+        /// Decode the `Date` as a string parsed by the given formatter.
+        case formatted(DateFormatter)
+
+        /// Decode the `Date` as a custom value decoded by the given closure.
+        case custom((Date) throws -> String)
+    }
+
+    /// The strategy to use in encoding dates. Defaults to `.deferredToDate`.
+    public var dateEncodingStrategy: DateEncodingStrategy = .deferredToDate
 
     /// Contextual user-provided information for use during encoding.
-    var userInfo: [CodingUserInfoKey : Any] = [:]
+    public var userInfo: [CodingUserInfoKey : Any] = [:]
 
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
+        let dateEncodingStrategy: DateEncodingStrategy
         let userInfo: [CodingUserInfoKey : Any]
     }
 
     /// The options set on the top-level encoder.
     fileprivate var options: _Options {
-        return _Options(userInfo: userInfo)
+        return _Options(
+            dateEncodingStrategy: dateEncodingStrategy,
+            userInfo: userInfo
+        )
     }
 
     // MARK: - Constructing a LTSV Encoder
@@ -38,7 +71,7 @@ public final class LTSVEncoder {
             throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: [], debugDescription: "Top-level \(T.self) did not encode any values."))
         }
 
-        return LTSV.covertToString(from: encoder.storage.containers)
+        return LTSV.covertToString(from: encoder.storage.containers as! [[String: String?]])
     }
 }
 
@@ -70,6 +103,19 @@ fileprivate class _LTSVEncoder: Encoder {
 
     // MARK: - Coding Path Operations
 
+    /// Returns whether a new element can be encoded at this coding path.
+    ///
+    /// `true` if an element has not yet been encoded at this coding path; `false` otherwise.
+    fileprivate var canEncodeNewValue: Bool {
+        // Every time a new value gets encoded, the key it's encoded for is pushed onto the coding path (even if it's a nil key from an unkeyed container).
+        // At the same time, every time a container is requested, a new value gets pushed onto the storage stack.
+        // If there are more values on the storage stack than on the coding path, it means the value is requesting more than one container, which violates the precondition.
+        //
+        // This means that anytime something that can request a new container goes onto the stack, we MUST push a key onto the coding path.
+        // Things which will not request containers do not need to have the coding path extended for them (but it doesn't matter if it is, because they will not reach here).
+        return self.storage.count == self.codingPath.count
+    }
+
     /// Performs the given closure with the given key pushed onto the end of the current coding path.
     ///
     /// - parameter key: The key to push. May be nil for unkeyed containers.
@@ -95,7 +141,7 @@ fileprivate class _LTSVEncoder: Encoder {
     }
 
     func singleValueContainer() -> SingleValueEncodingContainer {
-        fatalError("not implemented")
+        return self
     }
 }
 
@@ -106,7 +152,7 @@ fileprivate struct _LTSVEncodingStorage {
 
     /// The container stack.
     /// Elements
-    private(set) fileprivate var containers: [[String: String?]] = []
+    private(set) fileprivate var containers: [Any] = []
 
     // MARK: - Initialization
 
@@ -119,11 +165,11 @@ fileprivate struct _LTSVEncodingStorage {
         return self.containers.count
     }
 
-    fileprivate mutating func push(container: [String: String?]) {
+    fileprivate mutating func push(container: Any) {
         self.containers.append(container)
     }
 
-    fileprivate mutating func popContainer() -> [String: String?] {
+    fileprivate mutating func popContainer() -> Any {
         precondition(self.containers.count > 0, "Empty container stack.")
         return self.containers.popLast()!
     }
@@ -160,14 +206,14 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: String, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: String?, forKey key: Self.Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -187,13 +233,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: Int?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -205,13 +251,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int8, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: Int8?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -223,13 +269,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int16, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: Int16?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -241,13 +287,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int32, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     func encodeIfPresent(_ value: Int32?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -259,13 +305,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int64, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: Int64?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -277,13 +323,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: UInt, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: UInt?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -295,13 +341,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: UInt8, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: UInt8?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -313,13 +359,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: UInt16, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: UInt16?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -331,13 +377,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: UInt32, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: UInt32?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -349,13 +395,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: UInt64, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: UInt64?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer()
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -367,7 +413,9 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(try self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
@@ -478,6 +526,109 @@ fileprivate struct _LTSVUnkeyedEncodingContainer : UnkeyedEncodingContainer {
     }
 }
 
+extension _LTSVEncoder : SingleValueEncodingContainer {
+    // MARK: - SingleValueEncodingContainer Methods
+
+    fileprivate func assertCanEncodeNewValue() {
+        precondition(self.canEncodeNewValue, "Attempt to encode value through single value container when previously value already encoded.")
+    }
+
+    public func encodeNil() throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: NSNull())
+    }
+
+    public func encode(_ value: Bool) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: Int) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: Int8) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: Int16) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: Int32) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: Int64) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: UInt) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: UInt8) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: UInt16) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: UInt32) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: UInt64) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: String) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: Float) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        try self.storage.push(container: box(value))
+    }
+
+    public func encode(_ value: Double) throws {
+        assertCanEncodeNewValue()
+        self.storage.push(container: box(value))
+    }
+
+    public func encode<T : Encodable>(_ value: T) throws {
+        assertCanEncodeNewValue()
+        fatalError("not implemented")
+//        try self.storage.push(container: box(value))
+    }
+}
+
 // MARK: - Concrete Value Representations
 
 extension _LTSVEncoder {
@@ -494,4 +645,62 @@ extension _LTSVEncoder {
     fileprivate func box(_ value: UInt32) -> String { return String(value) }
     fileprivate func box(_ value: UInt64) -> String { return String(value) }
     fileprivate func box(_ value: String) -> String { return value }
+
+    fileprivate func box(_ value: Double) -> String { return String(value) }
+
+    fileprivate func box(_ date: Date) throws -> String {
+        switch self.options.dateEncodingStrategy {
+        case .deferredToDate:
+            // Must be called with a surrounding with(pushedKey:) call.
+            try date.encode(to: self)
+            return self.storage.popContainer() as! String
+
+        case .secondsSince1970:
+            return String(date.timeIntervalSince1970)
+
+        case .millisecondsSince1970:
+            return String(1000.0 * date.timeIntervalSince1970)
+
+        case .iso8601:
+            if #available(OSX 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *) {
+                return _iso8601Formatter.string(from: date)
+            } else {
+                fatalError("ISO8601DateFormatter is unavailable on this platform.")
+            }
+
+        case .nginxTimeLocal:
+            return LTSV.dateFormatter.string(from: date)
+
+        case .formatted(let formatter):
+            return formatter.string(from: date)
+
+        case .custom(let closure):
+            return try closure(date)
+        }
+    }
+
+    fileprivate func box<T : Encodable>(_ value: T) throws -> String {
+        if T.self == Date.self {
+            // Respect Date encoding strategy
+            return try self.box((value as! Date))
+        }
+
+        // The value should request a container from the _LTSVEncoder.
+        try value.encode(to: self)
+
+        return self.storage.popContainer() as! String
+    }
 }
+
+//===----------------------------------------------------------------------===//
+// Shared ISO8601 Date Formatter
+//===----------------------------------------------------------------------===//
+// NOTE: This value is implicitly lazy and _must_ be lazy.
+// We're compiled against the latest SDK (w/ ISO8601DateFormatter), but linked against whichever Foundation the user has.
+// ISO8601DateFormatter might not exist, so we better not hit this code path on an older OS.
+@available(macOS 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
+fileprivate var _iso8601Formatter: ISO8601DateFormatter = {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = .withInternetDateTime
+    return formatter
+}()

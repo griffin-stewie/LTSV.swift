@@ -105,10 +105,238 @@ final class LTSVEncoderTests: XCTestCase {
         XCTAssertEqual(models, decodedModels)
     }
 
+    func testLTSVEncodeDateDefferedDateStrategy() throws {
+        struct Model: Codable, Equatable {
+            let label1: Date
+            let label2: Date?
+        }
+
+        let date: Date = {
+            let calendar = Calendar(identifier: .gregorian)
+            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
+            let date = dCompo.date!
+            return date
+        }()
+
+
+        let model = Model(label1: date, label2: nil)
+
+        let encoder = LTSVEncoder()
+        let result = try encoder.encode(model)
+
+
+        let decoder = LTSVDecoder()
+        let decodedModel = try decoder.decode(Model.self, from: result)
+
+
+        XCTAssertEqual(model, decodedModel)
+    }
+
+    func testLTSVEncodeDateSecondsSince1970Strategy() throws {
+        struct Model: Codable, Equatable {
+            let label1: Date
+            let label2: Date?
+        }
+
+        let date: Date = {
+            let calendar = Calendar(identifier: .gregorian)
+            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
+            let date = dCompo.date!
+            return date
+        }()
+
+
+        let model = Model(label1: date, label2: nil)
+
+        let encoder = LTSVEncoder()
+        encoder.dateEncodingStrategy = .secondsSince1970
+        let result = try encoder.encode(model)
+
+
+        let decoder = LTSVDecoder()
+        decoder.dateDecodingStrategy = .secondsSince1970
+        let decodedModel = try decoder.decode(Model.self, from: result)
+
+
+        XCTAssertEqual(model, decodedModel)
+    }
+
+    func testLTSVEncodeDateMilliSecondsSince1970Strategy() throws {
+        struct Model: Codable, Equatable {
+            let label1: Date
+            let label2: Date?
+        }
+
+        let date: Date = {
+            let calendar = Calendar(identifier: .gregorian)
+            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
+            let date = dCompo.date!
+            return date
+        }()
+
+
+        let model = Model(label1: date, label2: nil)
+
+        let encoder = LTSVEncoder()
+        encoder.dateEncodingStrategy = .millisecondsSince1970
+        let result = try encoder.encode(model)
+
+
+        let decoder = LTSVDecoder()
+        decoder.dateDecodingStrategy = .millisecondsSince1970
+        let decodedModel = try decoder.decode(Model.self, from: result)
+
+
+        XCTAssertEqual(model, decodedModel)
+    }
+
+    func testLTSVEncodeDateISO8601Strategy() throws {
+        struct Model: Codable, Equatable {
+            let label1: Date
+            let label2: Date?
+        }
+
+        let date: Date = {
+            let calendar = Calendar(identifier: .gregorian)
+            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
+            let date = dCompo.date!
+            return date
+        }()
+
+
+        let model = Model(label1: date, label2: nil)
+
+        let encoder = LTSVEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let result = try encoder.encode(model)
+
+
+        let decoder = LTSVDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decodedModel = try decoder.decode(Model.self, from: result)
+
+
+        XCTAssertEqual(model, decodedModel)
+    }
+
+    func testLTSVEncodeDateGivenDateFormatterStrategy() throws {
+        struct Model: Codable, Equatable {
+            let label1: Date
+            let label2: Date?
+        }
+
+        let date: Date = {
+            let calendar = Calendar(identifier: .gregorian)
+            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
+            let date = dCompo.date!
+            return date
+        }()
+
+
+        let model = Model(label1: date, label2: nil)
+
+        let encoder = LTSVEncoder()
+        encoder.dateEncodingStrategy = .formatted(LTSV.dateFormatter)
+        let result = try encoder.encode(model)
+
+
+        let decoder = LTSVDecoder()
+        decoder.dateDecodingStrategy = .formatted(LTSV.dateFormatter)
+        let decodedModel = try decoder.decode(Model.self, from: result)
+
+
+        XCTAssertEqual(model, decodedModel)
+    }
+
+    func testLTSVEncodeDateCustomStrategy() throws {
+        struct Model: Codable, Equatable {
+            let label1: Date
+            let label2: Date?
+        }
+
+        let date: Date = {
+            let calendar = Calendar(identifier: .gregorian)
+            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
+            let date = dCompo.date!
+            return date
+        }()
+
+
+        let model = Model(label1: date, label2: nil)
+
+        let encoder = LTSVEncoder()
+        encoder.dateEncodingStrategy = .custom({ (date) -> String in
+            return LTSV.dateFormatter.string(from: date)
+        })
+        let result = try encoder.encode(model)
+
+
+        let decoder = LTSVDecoder()
+        decoder.dateDecodingStrategy = .custom({ (string) -> Date in
+            return LTSV.dateFormatter.date(from: string)!
+        })
+        let decodedModel = try decoder.decode(Model.self, from: result)
+
+
+        XCTAssertEqual(model, decodedModel)
+    }
+
+    func testLTSVEncodeDateNginxTimeLocalStrategy() throws {
+        struct Model: Codable, Equatable {
+            let label1: Date
+            let label2: Date?
+        }
+
+        let date: Date = {
+            let calendar = Calendar(identifier: .gregorian)
+            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
+            let date = dCompo.date!
+            return date
+        }()
+
+
+        let model = Model(label1: date, label2: nil)
+
+        let encoder = LTSVEncoder()
+        encoder.dateEncodingStrategy = .nginxTimeLocal
+        let result = try encoder.encode(model)
+
+
+        let decoder = LTSVDecoder()
+        decoder.dateDecodingStrategy = .nginxTimeLocal
+        let decodedModel = try decoder.decode(Model.self, from: result)
+
+
+        XCTAssertEqual(model, decodedModel)
+    }
+
+
     static var allTests = [
         ("testLTSVEncodeSingleRow", testLTSVEncodeSingleRow),
         ("testLTSVEncodeRows", testLTSVEncodeRows),
         ("testLTSVEncodeRowsTheEmptyValueFieldAsNil", testLTSVEncodeRowsTheEmptyValueFieldAsNil),
+        ("testLTSVEncodeRowsSupoortIntFamily", testLTSVEncodeRowsSupoortIntFamily),
+        ("testLTSVEncodeDateDefferedDateStrategy", testLTSVEncodeDateDefferedDateStrategy),
+        ("testLTSVEncodeDateSecondsSince1970Strategy", testLTSVEncodeDateSecondsSince1970Strategy),
+        ("testLTSVEncodeDateMilliSecondsSince1970Strategy", testLTSVEncodeDateMilliSecondsSince1970Strategy),
+        ("testLTSVEncodeDateISO8601Strategy", testLTSVEncodeDateISO8601Strategy),
+        ("testLTSVEncodeDateGivenDateFormatterStrategy", testLTSVEncodeDateGivenDateFormatterStrategy),
+        ("testLTSVEncodeDateCustomStrategy", testLTSVEncodeDateCustomStrategy),
+        ("testLTSVEncodeDateNginxTimeLocalStrategy", testLTSVEncodeDateNginxTimeLocalStrategy),
     ]
 }
+
+
+
+
+
+
+
 
