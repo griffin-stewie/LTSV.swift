@@ -36,8 +36,20 @@ public final class LTSVEncoder {
         case custom((Date) throws -> String)
     }
 
+    /// The strategy to use for encoding `Bool` values.
+    public enum BoolEncodingStrategy {
+        /// Encode the `Bool` using default initializer.
+        case `default`
+
+        /// Encode the `Bool` as a custom value encoded by the given closure.
+        case custom((_ value: Bool) throws -> String)
+    }
+
     /// The strategy to use in encoding dates. Defaults to `.deferredToDate`.
     public var dateEncodingStrategy: DateEncodingStrategy = .deferredToDate
+
+    /// The strategy to use in encoding bools. Defaults to `.default`.
+    public var boolEncodingStrategy: BoolEncodingStrategy = .default
 
     /// Contextual user-provided information for use during encoding.
     public var userInfo: [CodingUserInfoKey : Any] = [:]
@@ -45,6 +57,7 @@ public final class LTSVEncoder {
     /// Options set on the top-level encoder to pass down the encoding hierarchy.
     fileprivate struct _Options {
         let dateEncodingStrategy: DateEncodingStrategy
+        let boolEncodingStrategy: BoolEncodingStrategy
         let userInfo: [CodingUserInfoKey : Any]
     }
 
@@ -52,6 +65,7 @@ public final class LTSVEncoder {
     fileprivate var options: _Options {
         return _Options(
             dateEncodingStrategy: dateEncodingStrategy,
+            boolEncodingStrategy: boolEncodingStrategy,
             userInfo: userInfo
         )
     }
@@ -202,7 +216,21 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Bool, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(try self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    mutating func encodeIfPresent(_ value: Bool?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(try self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: String, forKey key: Key) throws {
@@ -647,6 +675,15 @@ extension _LTSVEncoder {
     fileprivate func box(_ value: String) -> String { return value }
 
     fileprivate func box(_ value: Double) -> String { return String(value) }
+
+    fileprivate func box(_ value: Bool) throws -> String {
+        switch self.options.boolEncodingStrategy {
+        case .default:
+            return String(value)
+        case .custom(let closure):
+            return try closure(value)
+        }
+    }
 
     fileprivate func box(_ date: Date) throws -> String {
         switch self.options.dateEncodingStrategy {

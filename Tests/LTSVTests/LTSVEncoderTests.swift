@@ -317,6 +317,55 @@ final class LTSVEncoderTests: XCTestCase {
         XCTAssertEqual(model, decodedModel)
     }
 
+    func testLTSVEncodeBoolDefaultStrategy() throws {
+        struct Model: Codable, Equatable {
+            let label1: Bool?
+            let label2: Bool
+            let label3: Bool
+        }
+
+        let model = Model(label1: nil, label2: true, label3: false)
+
+        let encoder = LTSVEncoder()
+        let result = try encoder.encode(model)
+
+        let decoder = LTSVDecoder()
+        let decodedModel = try decoder.decode(Model.self, from: result)
+
+        XCTAssertEqual(model, decodedModel)
+    }
+
+    func testLTSVEncodeBoolCustomStrategy() throws {
+        struct Model: Codable, Equatable {
+            let label1: Bool?
+            let label2: Bool
+            let label3: Bool
+        }
+
+        let model = Model(label1: nil, label2: true, label3: false)
+
+        let encoder = LTSVEncoder()
+        encoder.boolEncodingStrategy = .custom({ value in
+            value ? "good" : "bad"
+        })
+        let result = try encoder.encode(model)
+
+        let decoder = LTSVDecoder()
+        decoder.boolDecodingStrategy = .custom({ value in
+            switch value {
+            case "good":
+                return true
+            case "bad":
+                return false
+            default:
+                return false
+            }
+        })
+        let decodedModel = try decoder.decode(Model.self, from: result)
+
+        XCTAssertEqual(model, decodedModel)
+    }
+
 
     static var allTests = [
         ("testLTSVEncodeSingleRow", testLTSVEncodeSingleRow),
@@ -330,6 +379,8 @@ final class LTSVEncoderTests: XCTestCase {
         ("testLTSVEncodeDateGivenDateFormatterStrategy", testLTSVEncodeDateGivenDateFormatterStrategy),
         ("testLTSVEncodeDateCustomStrategy", testLTSVEncodeDateCustomStrategy),
         ("testLTSVEncodeDateNginxTimeLocalStrategy", testLTSVEncodeDateNginxTimeLocalStrategy),
+        ("testLTSVEncodeBoolDefaultStrategy", testLTSVEncodeBoolDefaultStrategy),
+        ("testLTSVEncodeBoolCustomStrategy", testLTSVEncodeBoolCustomStrategy),
     ]
 }
 
