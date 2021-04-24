@@ -11,28 +11,28 @@ import Foundation
 public final class LTSVEncoder {
     // MARK: Options
 
-    /// The strategy to use for decoding `Date` values.
+    /// The strategy to use for encoding `Date` values.
     public enum DateEncodingStrategy {
-        /// Defer to `Date` for decoding. This is the default strategy.
+        /// Defer to `Date` for encoding. This is the default strategy.
         case deferredToDate
 
-        /// Decode the `Date` as a UNIX timestamp from a number.
+        /// Encode the `Date` as a UNIX timestamp from a number.
         case secondsSince1970
 
-        /// Decode the `Date` as UNIX millisecond timestamp from a number.
+        /// Encode the `Date` as UNIX millisecond timestamp from a number.
         case millisecondsSince1970
 
-        /// Decode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
+        /// Encode the `Date` as an ISO-8601-formatted string (in RFC 3339 format).
         @available(OSX 10.12, iOS 10.0, watchOS 3.0, tvOS 10.0, *)
         case iso8601
 
         /// Nginx $time_local This is the default strategy.
         case nginxTimeLocal
 
-        /// Decode the `Date` as a string parsed by the given formatter.
+        /// Encode the `Date` as a string parsed by the given formatter.
         case formatted(DateFormatter)
 
-        /// Decode the `Date` as a custom value decoded by the given closure.
+        /// Encode the `Date` as a custom value decoded by the given closure.
         case custom((Date) throws -> String)
     }
 
