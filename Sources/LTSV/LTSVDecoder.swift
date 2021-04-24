@@ -36,14 +36,27 @@ public final class LTSVDecoder {
         case custom((_ value: String) throws -> Date)
     }
 
+    /// The strategy to use for decoding `Bool` values.
+    public enum BoolDecodingStrategy {
+        /// Decode the `Bool` using default initializer.
+        case `default`
+
+        /// Decode the `Bool` as a custom value decoded by the given closure.
+        case custom((_ value: String) throws -> Bool)
+    }
+
     /// The strategy to use in decoding dates. Defaults to `.deferredToDate`.
     public var dateDecodingStrategy: DateDecodingStrategy = .deferredToDate
+
+    /// The strategy to use in decoding bools. Defaults to `.default`.
+    public var boolDecodingStrategy: BoolDecodingStrategy = .default
 
     public var userInfo: [CodingUserInfoKey : Any] = [:]
 
     /// Options set on the top-level encoder to pass down the decoding hierarchy.
     fileprivate struct _Options {
         let dateDecodingStrategy: DateDecodingStrategy
+        let boolDecodingStrategy: BoolDecodingStrategy
         let userInfo: [CodingUserInfoKey : Any]
     }
 
@@ -51,6 +64,7 @@ public final class LTSVDecoder {
     fileprivate var options: _Options {
         return _Options(
             dateDecodingStrategy: dateDecodingStrategy,
+            boolDecodingStrategy: boolDecodingStrategy,
             userInfo: userInfo
         )
     }
@@ -205,7 +219,35 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
     }
 
     func decode(_ type: Bool.Type, forKey key: Key) throws -> Bool {
-        fatalError("not implemented")
+        guard let s = self.container[key.stringValue] else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "TODO"))
+        }
+
+        return try self.decoder.with(pushedKey: key) {
+            guard let entry = s.flatMap({$0}) else {
+                throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "Expected \(type) value but found null instead."))
+            }
+
+            guard let value = try self.decoder.unbox(entry, as: Bool.self) else {
+                throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "Expected \(type) value but found null instead."))
+            }
+
+            return value
+        }
+    }
+
+    func decodeIfPresent(_ type: Bool.Type, forKey key: Key) throws -> Bool? {
+        guard let s = self.container[key.stringValue] else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "No value associated with key \(key) (\"\(key.stringValue)\")."))
+        }
+
+        return self.decoder.with(pushedKey: key) {
+            guard let unwrapped = s, let v = type.init(unwrapped) else {
+                return nil
+            }
+
+            return v
+        }
     }
 
     func decode(_ type: String.Type, forKey key: Key) throws -> String {
@@ -222,7 +264,7 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
         }
     }
 
-    func decodeIfPresent(_ type: String.Type, forKey key: Self.Key) throws -> String? {
+    func decodeIfPresent(_ type: String.Type, forKey key: Key) throws -> String? {
         guard let v = self.container[key.stringValue] else {
             throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "TODO"))
         }
@@ -812,6 +854,17 @@ private extension _LTSVDecoder {
         return double
     }
 
+    func unbox(_ value: Any, as type: Bool.Type) throws -> Bool? {
+        guard let string = value as? String else { return nil }
+
+        switch self.options.boolDecodingStrategy {
+        case .default:
+            return string.toBool()
+        case .custom(let closure):
+            return try closure(string)
+        }
+    }
+
     func unbox(_ value: Any, as type: Date.Type) throws -> Date? {
         guard !(value is NSNull) else { return nil }
 
@@ -900,5 +953,13 @@ internal extension DecodingError {
     static func _typeMismatch(at path: [CodingKey], expectation: Any.Type, reality: Any) -> DecodingError {
         let description = "Expected to decode \(expectation) but found \(reality) instead."
         return .typeMismatch(expectation, DecodingError.Context(codingPath: path, debugDescription: description))
+    }
+}
+
+internal extension String {
+    func toBool() -> Bool? {
+        guard !self.isEmpty else { return nil }
+        guard let first = self.trimmingCharacters(in: .whitespaces).first else { return nil }
+        return "tTyY123456789".contains(first)
     }
 }

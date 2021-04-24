@@ -277,6 +277,55 @@ final class LTSVDecoderTests: XCTestCase {
         XCTAssertNil(model.label2)
     }
 
+    func testLTSVDecodeBoolDefaultStrategy() throws {
+        struct Model: Codable {
+            let label1: Bool?
+            let label2: Bool
+            let label3: Bool
+            let label4: Bool
+            let label5: Bool
+        }
+
+        let string = "label1:\tlabel2:true\tlabel3:false\tlabel4:1\tlabel5:0"
+
+        let decoder = LTSVDecoder()
+        let model = try decoder.decode(Model.self, from: string)
+
+        XCTAssertNil(model.label1)
+        XCTAssertTrue(model.label2)
+        XCTAssertFalse(model.label3)
+        XCTAssertTrue(model.label4)
+        XCTAssertFalse(model.label5)
+    }
+
+    func testLTSVDecodeBoolCustomStrategy() throws {
+        struct Model: Codable {
+            let label1: Bool?
+            let label2: Bool
+            let label3: Bool
+            let label4: Bool
+        }
+
+        let string = "label1:\tlabel2:👍\tlabel3:👎🏻\tlabel4:👎"
+
+        let decoder = LTSVDecoder()
+        decoder.boolDecodingStrategy = .custom({ value in
+            if value == "👍" {
+                return true
+            } else if value == "👎🏻" {
+                return false
+            } else {
+                return false
+            }
+        })
+        let model = try decoder.decode(Model.self, from: string)
+
+        XCTAssertNil(model.label1)
+        XCTAssertTrue(model.label2)
+        XCTAssertFalse(model.label3)
+        XCTAssertFalse(model.label4)
+    }
+
     static var allTests = [
         ("testLTSVDecodeSingleRow", testLTSVDecodeSingleRow),
         ("testLTSVDecodeRows", testLTSVDecodeRows),
@@ -289,6 +338,8 @@ final class LTSVDecoderTests: XCTestCase {
         ("testLTSVDecodeDateNginxTimeLocalStrategy", testLTSVDecodeDateNginxTimeLocalStrategy),
         ("testLTSVDecodeDateGivenDateFormatterStrategy", testLTSVDecodeDateGivenDateFormatterStrategy),
         ("testLTSVDecodeDateCustomStrategy", testLTSVDecodeDateCustomStrategy),
+        ("testLTSVDecodeBoolDefaultStrategy", testLTSVDecodeBoolDefaultStrategy),
+        ("testLTSVDecodeBoolCustomStrategy", testLTSVDecodeBoolCustomStrategy),
     ]
 }
 
