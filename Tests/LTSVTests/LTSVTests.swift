@@ -22,8 +22,4 @@ final class LTSVTests: XCTestCase {
         XCTAssertNil(dict["label1"]!)
         XCTAssertEqual(dict["label2"]!, "value2")
     }
-
-    static var allTests = [
-        ("testLTSVParse", testLTSVParse),
-    ]
 }

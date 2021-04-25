@@ -366,22 +366,6 @@ final class LTSVEncoderTests: XCTestCase {
         XCTAssertEqual(model, decodedModel)
     }
 
-
-    static var allTests = [
-        ("testLTSVEncodeSingleRow", testLTSVEncodeSingleRow),
-        ("testLTSVEncodeRows", testLTSVEncodeRows),
-        ("testLTSVEncodeRowsTheEmptyValueFieldAsNil", testLTSVEncodeRowsTheEmptyValueFieldAsNil),
-        ("testLTSVEncodeRowsSupoortIntFamily", testLTSVEncodeRowsSupoortIntFamily),
-        ("testLTSVEncodeDateDefferedDateStrategy", testLTSVEncodeDateDefferedDateStrategy),
-        ("testLTSVEncodeDateSecondsSince1970Strategy", testLTSVEncodeDateSecondsSince1970Strategy),
-        ("testLTSVEncodeDateMilliSecondsSince1970Strategy", testLTSVEncodeDateMilliSecondsSince1970Strategy),
-        ("testLTSVEncodeDateISO8601Strategy", testLTSVEncodeDateISO8601Strategy),
-        ("testLTSVEncodeDateGivenDateFormatterStrategy", testLTSVEncodeDateGivenDateFormatterStrategy),
-        ("testLTSVEncodeDateCustomStrategy", testLTSVEncodeDateCustomStrategy),
-        ("testLTSVEncodeDateNginxTimeLocalStrategy", testLTSVEncodeDateNginxTimeLocalStrategy),
-        ("testLTSVEncodeBoolDefaultStrategy", testLTSVEncodeBoolDefaultStrategy),
-        ("testLTSVEncodeBoolCustomStrategy", testLTSVEncodeBoolCustomStrategy),
-    ]
 }
 
 

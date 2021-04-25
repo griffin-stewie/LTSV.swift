@@ -1,7 +1,8 @@
 import XCTest
 
-import LTSV_swiftTests
+import LTSVTests
 
 var tests = [XCTestCaseEntry]()
-tests += LTSV_swiftTests.allTests()
+tests += LTSVTests.__allTests()
+
 XCTMain(tests)

@@ -111,16 +111,12 @@ final class LTSVDecoderTests: XCTestCase {
 
         let string = "label1:640414453.0\tlabel2:"
 
+        print(TimeZone.current)
+
         let decoder = LTSVDecoder()
         let model = try decoder.decode(Model.self, from: string)
 
-        let date: Date = {
-            let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
-            let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
-            let date = dCompo.date!
-            return date
-        }()
+        let date = Date(timeIntervalSinceReferenceDate: 640414453.0)
 
         XCTAssertEqual(model.label1, date)
         XCTAssertNil(model.label2)
@@ -138,13 +134,7 @@ final class LTSVDecoderTests: XCTestCase {
         decoder.dateDecodingStrategy = .secondsSince1970
         let model = try decoder.decode(Model.self, from: string)
 
-        let date: Date = {
-            let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
-            let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
-            let date = dCompo.date!
-            return date
-        }()
+        let date = Date(timeIntervalSince1970: 1618721653.0)
 
         XCTAssertEqual(model.label1, date)
         XCTAssertNil(model.label2)
@@ -162,13 +152,7 @@ final class LTSVDecoderTests: XCTestCase {
         decoder.dateDecodingStrategy = .millisecondsSince1970
         let model = try decoder.decode(Model.self, from: string)
 
-        let date: Date = {
-            let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
-            let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
-            let date = dCompo.date!
-            return date
-        }()
+        let date = Date(timeIntervalSince1970: 1618721653.0)
 
         XCTAssertEqual(model.label1, date)
         XCTAssertNil(model.label2)
@@ -209,15 +193,23 @@ final class LTSVDecoderTests: XCTestCase {
             let label2: Date?
         }
 
+        let dateFormatter: DateFormatter = {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
+            formatter.dateFormat = "[dd/MMM/yyyy:HH:mm:ss Z]"
+            return formatter
+        }()
+
         let string = "label1:[18/Apr/2021:13:54:13 +0900]\tlabel2:"
 
         let decoder = LTSVDecoder()
-        decoder.dateDecodingStrategy = .formatted(LTSV.dateFormatter)
+        decoder.dateDecodingStrategy = .formatted(dateFormatter)
         let model = try decoder.decode(Model.self, from: string)
 
         let date: Date = {
             let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
             let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
             let date = dCompo.date!
             return date
@@ -243,12 +235,14 @@ final class LTSVDecoderTests: XCTestCase {
 
         let date: Date = {
             let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
             let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
             let date = dCompo.date!
             return date
         }()
 
+        print("モデルのDate: \(model.label1)")
+        print("期待値のDate: \(date)")
         XCTAssertEqual(model.label1, date)
         XCTAssertNil(model.label2)
     }
@@ -267,7 +261,7 @@ final class LTSVDecoderTests: XCTestCase {
 
         let date: Date = {
             let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
             let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
             let date = dCompo.date!
             return date
@@ -350,21 +344,5 @@ final class LTSVDecoderTests: XCTestCase {
         XCTAssertEqual(model.label3, .ok)
         XCTAssertEqual(model.label4, .notFound)
     }
-
-    static var allTests = [
-        ("testLTSVDecodeSingleRow", testLTSVDecodeSingleRow),
-        ("testLTSVDecodeRows", testLTSVDecodeRows),
-        ("testLTSVDecodeRowsTheEmptyValueFieldAsNil", testLTSVDecodeRowsTheEmptyValueFieldAsNil),
-        ("testLTSVDecodeRowsSupoortIntFamily", testLTSVDecodeRowsSupoortIntFamily),
-        ("testLTSVDecodeDateDefferedDateStrategy", testLTSVDecodeDateDefferedDateStrategy),
-        ("testLTSVDecodeDateSecondsSince1970Strategy", testLTSVDecodeDateSecondsSince1970Strategy),
-        ("testLTSVDecodeDateMilliSecondsSince1970Strategy", testLTSVDecodeDateMilliSecondsSince1970Strategy),
-        ("testLTSVDecodeDateISO8601Strategy", testLTSVDecodeDateISO8601Strategy),
-        ("testLTSVDecodeDateNginxTimeLocalStrategy", testLTSVDecodeDateNginxTimeLocalStrategy),
-        ("testLTSVDecodeDateGivenDateFormatterStrategy", testLTSVDecodeDateGivenDateFormatterStrategy),
-        ("testLTSVDecodeDateCustomStrategy", testLTSVDecodeDateCustomStrategy),
-        ("testLTSVDecodeBoolDefaultStrategy", testLTSVDecodeBoolDefaultStrategy),
-        ("testLTSVDecodeBoolCustomStrategy", testLTSVDecodeBoolCustomStrategy),
-    ]
 }
 
