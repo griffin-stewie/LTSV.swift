@@ -326,6 +326,31 @@ final class LTSVDecoderTests: XCTestCase {
         XCTAssertFalse(model.label4)
     }
 
+    func testLTSVDecodeEnum() throws {
+
+        enum StatusCode: Int, Codable {
+            case ok = 200
+            case notFound = 404
+        }
+
+        struct Model: Codable {
+            let label1: String
+            let label2: String
+            let label3: StatusCode
+            let label4: StatusCode
+        }
+
+        let string = "label1:200\tlabel2:404\tlabel3:200\tlabel4:404"
+
+        let decoder = LTSVDecoder()
+        let model = try decoder.decode(Model.self, from: string)
+
+        XCTAssertEqual(model.label1, "200")
+        XCTAssertEqual(model.label2, "404")
+        XCTAssertEqual(model.label3, .ok)
+        XCTAssertEqual(model.label4, .notFound)
+    }
+
     static var allTests = [
         ("testLTSVDecodeSingleRow", testLTSVDecodeSingleRow),
         ("testLTSVDecodeRows", testLTSVDecodeRows),
