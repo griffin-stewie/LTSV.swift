@@ -29,7 +29,7 @@ public struct LTSV {
     }
 }
 
-public extension LTSV {
+internal extension LTSV {
     static let dateFormatter: DateFormatter = {
         var formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
