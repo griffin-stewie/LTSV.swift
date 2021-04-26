@@ -388,6 +388,28 @@ final class LTSVEncoderTests: XCTestCase {
         XCTAssertEqual(model, decodedModel)
     }
 
+    func testLTSVEncodeStringBasedEnum() throws {
+
+        enum StatusCode: String, Codable {
+            case ok = "200"
+            case notFound = "404"
+        }
+
+        struct Model: Codable, Equatable {
+            let label1: String
+            let label2: String
+            let label3: StatusCode
+            let label4: StatusCode
+        }
+
+        let model = Model(label1: "200", label2: "404", label3: .ok, label4: .notFound)
+        let encoder = LTSVEncoder()
+        let result = try encoder.encode(model)
+        let decoder = LTSVDecoder()
+        let decodedModel = try decoder.decode(Model.self, from: result)
+        XCTAssertEqual(model, decodedModel)
+    }
+
 }
 
 
