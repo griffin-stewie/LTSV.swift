@@ -621,6 +621,20 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
         }
     }
 
+    func decodeIfPresent<T>(_ type: T.Type, forKey key: Key) throws -> T? where T : Decodable {
+        guard let s = self.container[key.stringValue] else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "No value associated with key \(key) (\"\(key.stringValue)\")."))
+        }
+
+        guard let entry = s else {
+            return nil
+        }
+
+        return try self.decoder.with(pushedKey: key) {
+            return try self.decoder.unbox(entry, as: T.self)
+        }
+    }
+
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
         fatalError("not implemented")
     }
@@ -840,7 +854,6 @@ extension _LTSVDecoder : SingleValueDecodingContainer {
     func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
         fatalError("not implemented")
     }
-
 }
 
 // MARK: - Concrete Value Representations

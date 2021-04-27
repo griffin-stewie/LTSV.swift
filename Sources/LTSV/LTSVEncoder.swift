@@ -446,6 +446,18 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
         dict.updateValue(try self.encoder.box(value), forKey: key.stringValue)
     }
 
+    func encodeIfPresent<T>(_ value: T?, forKey key: Key) throws where T : Encodable {
+        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(try self.encoder.box(wrapped), forKey: key.stringValue)
+    }
+
     mutating func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> where NestedKey : CodingKey {
         fatalError("not implemented")
     }

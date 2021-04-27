@@ -332,9 +332,10 @@ final class LTSVDecoderTests: XCTestCase {
             let label2: String
             let label3: StatusCode
             let label4: StatusCode
+            let label5: StatusCode?
         }
 
-        let string = "label1:200\tlabel2:404\tlabel3:200\tlabel4:404"
+        let string = "label1:200\tlabel2:404\tlabel3:200\tlabel4:404\tlabel5:"
 
         let decoder = LTSVDecoder()
         let model = try decoder.decode(Model.self, from: string)
@@ -343,6 +344,7 @@ final class LTSVDecoderTests: XCTestCase {
         XCTAssertEqual(model.label2, "404")
         XCTAssertEqual(model.label3, .ok)
         XCTAssertEqual(model.label4, .notFound)
+        XCTAssertNil(model.label5)
     }
 
     func testLTSVDecodeStringBasedEnum() throws {
