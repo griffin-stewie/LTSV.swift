@@ -32,7 +32,7 @@ public struct LTSV {
 
 internal extension LTSV {
     static let dateFormatter: DateFormatter = {
-        var formatter = DateFormatter()
+        let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
         formatter.dateFormat = "[dd/MMM/yyyy:HH:mm:ss Z]"
         return formatter

@@ -8,19 +8,15 @@ final class LTSVEncoderTests: XCTestCase {
             let label2: String
         }
 
-        // let string = "label1:value1\tlabel2:value2"
-
         let model = Model(label1: "value1", label2: "value2")
 
         let encoder = LTSVEncoder()
         let result = try encoder.encode(model)
 
 
-        let decoder = LTSVDecoder()
-        let decodedModel = try decoder.decode(Model.self, from: result)
+        let expects = "label1:value1\tlabel2:value2"
 
-
-        XCTAssertEqual(model, decodedModel)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeRows() throws {
@@ -28,9 +24,6 @@ final class LTSVEncoderTests: XCTestCase {
             let label1: String
             let label2: String
         }
-
-        // let string = "label1:value1\tlabel2:value2\nlabel1:value3\tlabel2:value4"
-
 
         let models = [
             Model(label1: "value1", label2: "value2"),
@@ -41,10 +34,12 @@ final class LTSVEncoderTests: XCTestCase {
         let encoder = LTSVEncoder()
         let result = try encoder.encode(models)
 
-        let decoder = LTSVDecoder()
-        let decodedModels = try decoder.decode([Model].self, from: result)
+        let expects = """
+            label1:value1\tlabel2:value2
+            label1:value3\tlabel2:value4
+            """
 
-        XCTAssertEqual(models, decodedModels)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeRowsTheEmptyValueFieldAsNil() throws {
@@ -61,10 +56,12 @@ final class LTSVEncoderTests: XCTestCase {
         let encoder = LTSVEncoder()
         let result = try encoder.encode(models)
 
-        let decoder = LTSVDecoder()
-        let decodedModels = try decoder.decode([Model].self, from: result)
+        let expects = """
+            label1:\tlabel2:value2
+            label1:\tlabel2:
+            """
 
-        XCTAssertEqual(models, decodedModels)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeRowsSupoortIntFamily() throws {
@@ -99,10 +96,12 @@ final class LTSVEncoderTests: XCTestCase {
         let encoder = LTSVEncoder()
         let result = try encoder.encode(models)
 
-        let decoder = LTSVDecoder()
-        let decodedModels = try decoder.decode([Model].self, from: result)
+        let expects = """
+            int:-1\tintOptional:\tint8:1\tint8Optional:\tint16:1\tint16Optional:\tint32:1\tint32Optional:\tint64:1\tint64Optional:\tuInt:1\tuIntOptional:\tuInt8:1\tuInt8Optional:\tuInt16:1\tuInt16Optional:\tuInt32:1\tuInt32Optional:\tuInt64:1\tuInt64Optional:100000
+            int:-1\tintOptional:1\tint8:1\tint8Optional:1\tint16:1\tint16Optional:\tint32:1\tint32Optional:\tint64:1\tint64Optional:\tuInt:1\tuIntOptional:\tuInt8:1\tuInt8Optional:\tuInt16:1\tuInt16Optional:\tuInt32:1\tuInt32Optional:\tuInt64:1\tuInt64Optional:100000
+            """
 
-        XCTAssertEqual(models, decodedModels)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeDateDefferedDateStrategy() throws {
@@ -113,7 +112,7 @@ final class LTSVEncoderTests: XCTestCase {
 
         let date: Date = {
             let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
             let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
             let date = dCompo.date!
             return date
@@ -125,12 +124,9 @@ final class LTSVEncoderTests: XCTestCase {
         let encoder = LTSVEncoder()
         let result = try encoder.encode(model)
 
+        let expects = "label1:640414453.0\tlabel2:"
 
-        let decoder = LTSVDecoder()
-        let decodedModel = try decoder.decode(Model.self, from: result)
-
-
-        XCTAssertEqual(model, decodedModel)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeDateSecondsSince1970Strategy() throws {
@@ -141,7 +137,7 @@ final class LTSVEncoderTests: XCTestCase {
 
         let date: Date = {
             let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
             let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
             let date = dCompo.date!
             return date
@@ -155,12 +151,9 @@ final class LTSVEncoderTests: XCTestCase {
         let result = try encoder.encode(model)
 
 
-        let decoder = LTSVDecoder()
-        decoder.dateDecodingStrategy = .secondsSince1970
-        let decodedModel = try decoder.decode(Model.self, from: result)
+        let expects = "label1:1618721653.0\tlabel2:"
 
-
-        XCTAssertEqual(model, decodedModel)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeDateMilliSecondsSince1970Strategy() throws {
@@ -171,7 +164,7 @@ final class LTSVEncoderTests: XCTestCase {
 
         let date: Date = {
             let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
             let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
             let date = dCompo.date!
             return date
@@ -185,12 +178,9 @@ final class LTSVEncoderTests: XCTestCase {
         let result = try encoder.encode(model)
 
 
-        let decoder = LTSVDecoder()
-        decoder.dateDecodingStrategy = .millisecondsSince1970
-        let decodedModel = try decoder.decode(Model.self, from: result)
+        let expects = "label1:1618721653000.0\tlabel2:"
 
-
-        XCTAssertEqual(model, decodedModel)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeDateISO8601Strategy() throws {
@@ -201,7 +191,7 @@ final class LTSVEncoderTests: XCTestCase {
 
         let date: Date = {
             let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
             let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
             let date = dCompo.date!
             return date
@@ -214,13 +204,9 @@ final class LTSVEncoderTests: XCTestCase {
         encoder.dateEncodingStrategy = .iso8601
         let result = try encoder.encode(model)
 
+        let expects = "label1:2021-04-18T04:54:13Z\tlabel2:"
 
-        let decoder = LTSVDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        let decodedModel = try decoder.decode(Model.self, from: result)
-
-
-        XCTAssertEqual(model, decodedModel)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeDateGivenDateFormatterStrategy() throws {
@@ -231,26 +217,31 @@ final class LTSVEncoderTests: XCTestCase {
 
         let date: Date = {
             let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
             let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
             let date = dCompo.date!
             return date
+        }()
+
+        let dateFormatter: DateFormatter = {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
+            formatter.dateFormat = "[dd/MMM/yyyy:HH:mm:ss Z]"
+            return formatter
         }()
 
 
         let model = Model(label1: date, label2: nil)
 
         let encoder = LTSVEncoder()
-        encoder.dateEncodingStrategy = .formatted(LTSV.dateFormatter)
+        encoder.dateEncodingStrategy = .formatted(dateFormatter)
         let result = try encoder.encode(model)
 
 
-        let decoder = LTSVDecoder()
-        decoder.dateDecodingStrategy = .formatted(LTSV.dateFormatter)
-        let decodedModel = try decoder.decode(Model.self, from: result)
+        let expects = "label1:[18/Apr/2021:13:54:13 +0900]\tlabel2:"
 
-
-        XCTAssertEqual(model, decodedModel)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeDateCustomStrategy() throws {
@@ -261,30 +252,32 @@ final class LTSVEncoderTests: XCTestCase {
 
         let date: Date = {
             let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
             let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
             let date = dCompo.date!
             return date
         }()
 
+        let dateFormatter: DateFormatter = {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.timeZone = TimeZone(secondsFromGMT: 9 * 60 * 60)!
+            formatter.dateFormat = "[dd/MMM/yyyy:HH:mm:ss Z]"
+            return formatter
+        }()
 
         let model = Model(label1: date, label2: nil)
 
         let encoder = LTSVEncoder()
         encoder.dateEncodingStrategy = .custom({ (date) -> String in
-            return LTSV.dateFormatter.string(from: date)
+            return dateFormatter.string(from: date)
         })
         let result = try encoder.encode(model)
 
 
-        let decoder = LTSVDecoder()
-        decoder.dateDecodingStrategy = .custom({ (string) -> Date in
-            return LTSV.dateFormatter.date(from: string)!
-        })
-        let decodedModel = try decoder.decode(Model.self, from: result)
+        let expects = "label1:[18/Apr/2021:13:54:13 +0900]\tlabel2:"
 
-
-        XCTAssertEqual(model, decodedModel)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeDateNginxTimeLocalStrategy() throws {
@@ -295,7 +288,7 @@ final class LTSVEncoderTests: XCTestCase {
 
         let date: Date = {
             let calendar = Calendar(identifier: .gregorian)
-            let timeZone = TimeZone(abbreviation: "ja-JP")
+            let timeZone = TimeZone.current
             let dCompo = DateComponents(calendar: calendar, timeZone: timeZone, year: 2021, month: 4, day: 18, hour: 13, minute: 54, second: 13)
             let date = dCompo.date!
             return date
@@ -308,13 +301,16 @@ final class LTSVEncoderTests: XCTestCase {
         encoder.dateEncodingStrategy = .nginxTimeLocal
         let result = try encoder.encode(model)
 
+        let dateFormatter: DateFormatter = {
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "Z"
+            return formatter
+        }()
 
-        let decoder = LTSVDecoder()
-        decoder.dateDecodingStrategy = .nginxTimeLocal
-        let decodedModel = try decoder.decode(Model.self, from: result)
+        let expects = "label1:[18/Apr/2021:13:54:13 \(dateFormatter.string(from: date))]\tlabel2:"
 
-
-        XCTAssertEqual(model, decodedModel)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeBoolDefaultStrategy() throws {
@@ -329,10 +325,9 @@ final class LTSVEncoderTests: XCTestCase {
         let encoder = LTSVEncoder()
         let result = try encoder.encode(model)
 
-        let decoder = LTSVDecoder()
-        let decodedModel = try decoder.decode(Model.self, from: result)
+        let expects = "label1:\tlabel2:true\tlabel3:false"
 
-        XCTAssertEqual(model, decodedModel)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeBoolCustomStrategy() throws {
@@ -350,20 +345,9 @@ final class LTSVEncoderTests: XCTestCase {
         })
         let result = try encoder.encode(model)
 
-        let decoder = LTSVDecoder()
-        decoder.boolDecodingStrategy = .custom({ value in
-            switch value {
-            case "good":
-                return true
-            case "bad":
-                return false
-            default:
-                return false
-            }
-        })
-        let decodedModel = try decoder.decode(Model.self, from: result)
+        let expects = "label1:\tlabel2:good\tlabel3:bad"
 
-        XCTAssertEqual(model, decodedModel)
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeEnum() throws {
@@ -383,9 +367,9 @@ final class LTSVEncoderTests: XCTestCase {
         let model = Model(label1: "200", label2: "404", label3: .ok, label4: .notFound)
         let encoder = LTSVEncoder()
         let result = try encoder.encode(model)
-        let decoder = LTSVDecoder()
-        let decodedModel = try decoder.decode(Model.self, from: result)
-        XCTAssertEqual(model, decodedModel)
+        let expects = "label1:200\tlabel2:404\tlabel3:200\tlabel4:404"
+
+        XCTAssertEqual(result, expects)
     }
 
     func testLTSVEncodeStringBasedEnum() throws {
@@ -405,9 +389,9 @@ final class LTSVEncoderTests: XCTestCase {
         let model = Model(label1: "200", label2: "404", label3: .ok, label4: .notFound)
         let encoder = LTSVEncoder()
         let result = try encoder.encode(model)
-        let decoder = LTSVDecoder()
-        let decodedModel = try decoder.decode(Model.self, from: result)
-        XCTAssertEqual(model, decodedModel)
+        let expects = "label1:200\tlabel2:404\tlabel3:200\tlabel4:404"
+
+        XCTAssertEqual(result, expects)
     }
 
 }
