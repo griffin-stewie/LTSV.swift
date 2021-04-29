@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OrderedCollections
 
 public final class LTSVEncoder {
     // MARK: Options
@@ -85,7 +86,7 @@ public final class LTSVEncoder {
             throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: [], debugDescription: "Top-level \(T.self) did not encode any values."))
         }
 
-        return LTSV.covertToString(from: encoder.storage.containers as! [[String: String?]])
+        return LTSV.covertToString(from: encoder.storage.containers as! [OrderedDictionary<String,String?>])
     }
 }
 
@@ -144,7 +145,7 @@ fileprivate class _LTSVEncoder: Encoder {
     // MARK: - Encoder Methods
 
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let topContainer: [String: String?] = [:]
+        let topContainer: OrderedDictionary<String,String?> = [:]
         self.storage.push(container: topContainer)
         let container = _LTSVKeyedEncodingContainer<Key>(referencing: self, codingPath: self.codingPath, wrapping: topContainer)
         return KeyedEncodingContainer(container)
@@ -196,7 +197,7 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     private let encoder: _LTSVEncoder
 
     /// A reference to the container we're writing to.
-    private var container: [String: String?]
+    private var container: OrderedDictionary<String,String?>
 
     /// The path of coding keys taken to get to this point in encoding.
     private(set) public var codingPath: [CodingKey]
@@ -204,7 +205,7 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     // MARK: - Initialization
 
     /// Initializes `self` with the given references.
-    fileprivate init(referencing encoder: _LTSVEncoder, codingPath: [CodingKey], wrapping container: [String: String?]) {
+    fileprivate init(referencing encoder: _LTSVEncoder, codingPath: [CodingKey], wrapping container: OrderedDictionary<String,String?>) {
         self.encoder = encoder
         self.codingPath = codingPath
         self.container = container
@@ -216,13 +217,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Bool, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(try self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: Bool?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -234,14 +235,14 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: String, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: String?, forKey key: Self.Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -261,13 +262,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: Int?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -279,13 +280,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int8, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: Int8?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -297,13 +298,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int16, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: Int16?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -315,13 +316,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int32, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     func encodeIfPresent(_ value: Int32?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -333,13 +334,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Int64, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: Int64?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -351,13 +352,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: UInt, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: UInt?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -369,13 +370,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: UInt8, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: UInt8?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -387,13 +388,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: UInt16, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: UInt16?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -405,13 +406,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: UInt32, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: UInt32?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -423,13 +424,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: UInt64, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
     }
 
     mutating func encodeIfPresent(_ value: UInt64?, forKey key: Key) throws {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {
@@ -441,13 +442,13 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode<T>(_ value: T, forKey key: Key) throws where T : Encodable {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
         dict.updateValue(try self.encoder.box(value), forKey: key.stringValue)
     }
 
     func encodeIfPresent<T>(_ value: T?, forKey key: Key) throws where T : Encodable {
-        var dict = self.encoder.storage.popContainer() as! [String: String?]
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
         defer { self.encoder.storage.push(container: dict) }
 
         guard let wrapped = value else {

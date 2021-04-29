@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import OrderedCollections
 
 public final class LTSVDecoder {
     // MARK: Options
@@ -122,8 +123,8 @@ fileprivate class _LTSVDecoder: Decoder {
     // MARK: - Decoder Methods
 
     public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        guard let dict = self.storage.topContainer as? [String: String?] else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: [String: String?].self, reality: self.storage.topContainer)
+        guard let dict = self.storage.topContainer as? OrderedDictionary<String,String?> else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: OrderedDictionary<String,String?>.self, reality: self.storage.topContainer)
         }
 
         let container = LTSVKeyedDecodingContainer<Key>(referencing: self, wrapping: dict)
@@ -131,8 +132,8 @@ fileprivate class _LTSVDecoder: Decoder {
     }
 
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        guard let container = self.storage.topContainer as? [[String: String?]] else {
-            throw DecodingError._typeMismatch(at: self.codingPath, expectation: [[String: String?]].self, reality: self.storage.topContainer)
+        guard let container = self.storage.topContainer as? [OrderedDictionary<String,String?>] else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: [OrderedDictionary<String,String?>].self, reality: self.storage.topContainer)
         }
 
         return LTSVUnkeyedDecodingContainer(referencing: self, wrapping: container)
@@ -190,7 +191,7 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
     private let decoder: _LTSVDecoder
 
     /// A reference to the container we're reading from.
-    private var container: [String: String?]
+    private var container: OrderedDictionary<String,String?>
 
     /// The path of coding keys taken to get to this point in decoding.
     private(set) public var codingPath: [CodingKey]
@@ -198,7 +199,7 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
     // MARK: - Initialization
 
     /// Initializes `self` by referencing the given decoder and container.
-    fileprivate init(referencing decoder: _LTSVDecoder, wrapping container: [String : String?]) {
+    fileprivate init(referencing decoder: _LTSVDecoder, wrapping container: OrderedDictionary<String,String?>) {
         self.decoder = decoder
         self.container = container
         self.codingPath = decoder.codingPath
@@ -661,7 +662,7 @@ private struct LTSVUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     private let decoder: _LTSVDecoder
 
     /// A reference to the container we're reading from.
-    private var container: [[String: String?]]
+    private var container: [OrderedDictionary<String,String?>]
 
     /// The path of coding keys taken to get to this point in decoding.
     private(set) public var codingPath: [CodingKey]
@@ -672,7 +673,7 @@ private struct LTSVUnkeyedDecodingContainer: UnkeyedDecodingContainer {
     // MARK: - Initialization
 
     /// Initializes `self` by referencing the given decoder and container.
-    fileprivate init(referencing decoder: _LTSVDecoder, wrapping container: [[String: String?]]) {
+    fileprivate init(referencing decoder: _LTSVDecoder, wrapping container: [OrderedDictionary<String,String?>]) {
         self.decoder = decoder
         self.container = container
         self.codingPath = decoder.codingPath
