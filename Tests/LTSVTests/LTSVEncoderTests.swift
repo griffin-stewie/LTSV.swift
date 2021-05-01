@@ -390,12 +390,13 @@ final class LTSVEncoderTests: XCTestCase {
             let label2: String
             let label3: StatusCode
             let label4: StatusCode
+            let label5: StatusCode?
         }
 
-        let model = Model(label1: "200", label2: "404", label3: .ok, label4: .notFound)
+        let model = Model(label1: "200", label2: "404", label3: .ok, label4: .notFound, label5: nil)
         let encoder = LTSVEncoder()
         let result = try encoder.encode(model)
-        let expects = "label1:200\tlabel2:404\tlabel3:200\tlabel4:404"
+        let expects = "label1:200\tlabel2:404\tlabel3:200\tlabel4:404\tlabel5:"
 
         XCTAssertEqual(result, expects)
     }
@@ -412,12 +413,13 @@ final class LTSVEncoderTests: XCTestCase {
             let label2: String
             let label3: StatusCode
             let label4: StatusCode
+            let label5: StatusCode?
         }
 
-        let model = Model(label1: "200", label2: "404", label3: .ok, label4: .notFound)
+        let model = Model(label1: "200", label2: "404", label3: .ok, label4: .notFound, label5: nil)
         let encoder = LTSVEncoder()
         let result = try encoder.encode(model)
-        let expects = "label1:200\tlabel2:404\tlabel3:200\tlabel4:404"
+        let expects = "label1:200\tlabel2:404\tlabel3:200\tlabel4:404\tlabel5:"
 
         XCTAssertEqual(result, expects)
     }
