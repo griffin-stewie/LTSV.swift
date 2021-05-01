@@ -12,4 +12,4 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      run: ls -n /Applications/ | grep Xcode*
+      - run: ls -n /Applications/ | grep Xcode*
