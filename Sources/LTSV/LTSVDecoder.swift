@@ -861,7 +861,11 @@ extension _LTSVDecoder : SingleValueDecodingContainer {
     }
 
     func decode(_ type: Float.Type) throws -> Float {
-        fatalError("not implemented")
+        guard let value = try self.unbox(self.storage.topContainer, as: Float.self) else {
+            fatalError("")
+        }
+
+        return value
     }
 
     func decode(_ type: Int.Type) throws -> Int {
@@ -935,6 +939,14 @@ private extension _LTSVDecoder {
     func unbox(_ value: Any, as type: Double.Type) throws -> Double? {
         guard let string = value as? String else { return nil }
         guard let double = Double(string) else {
+            throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
+        }
+        return double
+    }
+
+    func unbox(_ value: Any, as type: Float.Type) throws -> Float? {
+        guard let string = value as? String else { return nil }
+        guard let double = Float(string) else {
             throw DecodingError._typeMismatch(at: self.codingPath, expectation: type, reality: value)
         }
         return double

@@ -393,10 +393,10 @@ final class LTSVDecoderTests: XCTestCase {
             let label1: String
             let label2: String
             let label3: StatusCode
-            let label4: StatusCode
+            let label4: StatusCode?
         }
 
-        let string = "label1:200\tlabel2:404\tlabel3:200\tlabel4:404"
+        let string = "label1:200\tlabel2:404\tlabel3:200\tlabel4:"
 
         let decoder = LTSVDecoder()
         let model = try decoder.decode(Model.self, from: string)
@@ -404,7 +404,107 @@ final class LTSVDecoderTests: XCTestCase {
         XCTAssertEqual(model.label1, "200")
         XCTAssertEqual(model.label2, "404")
         XCTAssertEqual(model.label3, .ok)
-        XCTAssertEqual(model.label4, .notFound)
+        XCTAssertNil(model.label4)
+    }
+
+    func testLTSVDecodeDoubleBasedEnum() throws {
+
+        enum StatusCode: Double, Codable {
+            case ok = 200
+            case notFound = 404
+        }
+
+        struct Model: Codable {
+            let label1: String
+            let label2: String
+            let label3: StatusCode
+            let label4: StatusCode?
+        }
+
+        let string = "label1:200\tlabel2:404\tlabel3:200\tlabel4:"
+
+        let decoder = LTSVDecoder()
+        let model = try decoder.decode(Model.self, from: string)
+
+        XCTAssertEqual(model.label1, "200")
+        XCTAssertEqual(model.label2, "404")
+        XCTAssertEqual(model.label3, .ok)
+        XCTAssertNil(model.label4)
+    }
+
+    func testLTSVDecodeFloatBasedEnum() throws {
+
+        enum StatusCode: Float, Codable {
+            case ok = 200
+            case notFound = 404
+        }
+
+        struct Model: Codable {
+            let label1: String
+            let label2: String
+            let label3: StatusCode
+            let label4: StatusCode?
+        }
+
+        let string = "label1:200\tlabel2:404\tlabel3:200\tlabel4:"
+
+        let decoder = LTSVDecoder()
+        let model = try decoder.decode(Model.self, from: string)
+
+        XCTAssertEqual(model.label1, "200")
+        XCTAssertEqual(model.label2, "404")
+        XCTAssertEqual(model.label3, .ok)
+        XCTAssertNil(model.label4)
+    }
+
+    func testLTSVDecodeFloat32BasedEnum() throws {
+
+        enum StatusCode: Float32, Codable {
+            case ok = 200
+            case notFound = 404
+        }
+
+        struct Model: Codable {
+            let label1: String
+            let label2: String
+            let label3: StatusCode
+            let label4: StatusCode?
+        }
+
+        let string = "label1:200\tlabel2:404\tlabel3:200\tlabel4:"
+
+        let decoder = LTSVDecoder()
+        let model = try decoder.decode(Model.self, from: string)
+
+        XCTAssertEqual(model.label1, "200")
+        XCTAssertEqual(model.label2, "404")
+        XCTAssertEqual(model.label3, .ok)
+        XCTAssertNil(model.label4)
+    }
+
+    func testLTSVDecodeFloat64BasedEnum() throws {
+
+        enum StatusCode: Float64, Codable {
+            case ok = 200
+            case notFound = 404
+        }
+
+        struct Model: Codable {
+            let label1: String
+            let label2: String
+            let label3: StatusCode
+            let label4: StatusCode?
+        }
+
+        let string = "label1:200\tlabel2:404\tlabel3:200\tlabel4:"
+
+        let decoder = LTSVDecoder()
+        let model = try decoder.decode(Model.self, from: string)
+
+        XCTAssertEqual(model.label1, "200")
+        XCTAssertEqual(model.label2, "404")
+        XCTAssertEqual(model.label3, .ok)
+        XCTAssertNil(model.label4)
     }
 }
 

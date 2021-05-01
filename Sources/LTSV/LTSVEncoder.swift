@@ -680,8 +680,7 @@ extension _LTSVEncoder : SingleValueEncodingContainer {
 
     public func encode(_ value: Float) throws {
         assertCanEncodeNewValue()
-        fatalError("not implemented")
-//        try self.storage.push(container: box(value))
+        self.storage.push(container: box(value))
     }
 
     public func encode(_ value: Double) throws {

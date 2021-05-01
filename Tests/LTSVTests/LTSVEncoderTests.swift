@@ -424,6 +424,97 @@ final class LTSVEncoderTests: XCTestCase {
         XCTAssertEqual(result, expects)
     }
 
+    func testLTSVEncodeDoubleBasedEnum() throws {
+
+        enum StatusCode: Double, Codable {
+            case ok = 200.0
+            case notFound = 404.0
+        }
+
+        struct Model: Codable, Equatable {
+            let label1: String
+            let label2: String
+            let label3: StatusCode
+            let label4: StatusCode
+            let label5: StatusCode?
+        }
+
+        let model = Model(label1: "200.0", label2: "404.0", label3: .ok, label4: .notFound, label5: nil)
+        let encoder = LTSVEncoder()
+        let result = try encoder.encode(model)
+        let expects = "label1:200.0\tlabel2:404.0\tlabel3:200.0\tlabel4:404.0\tlabel5:"
+
+        XCTAssertEqual(result, expects)
+    }
+
+    func testLTSVEncodeFloatBasedEnum() throws {
+
+        enum StatusCode: Float, Codable {
+            case ok = 200.0
+            case notFound = 404.0
+        }
+
+        struct Model: Codable, Equatable {
+            let label1: String
+            let label2: String
+            let label3: StatusCode
+            let label4: StatusCode
+            let label5: StatusCode?
+        }
+
+        let model = Model(label1: "200.0", label2: "404.0", label3: .ok, label4: .notFound, label5: nil)
+        let encoder = LTSVEncoder()
+        let result = try encoder.encode(model)
+        let expects = "label1:200.0\tlabel2:404.0\tlabel3:200.0\tlabel4:404.0\tlabel5:"
+
+        XCTAssertEqual(result, expects)
+    }
+
+    func testLTSVEncodeFloat32BasedEnum() throws {
+
+        enum StatusCode: Float32, Codable {
+            case ok = 200.0
+            case notFound = 404.0
+        }
+
+        struct Model: Codable, Equatable {
+            let label1: String
+            let label2: String
+            let label3: StatusCode
+            let label4: StatusCode
+            let label5: StatusCode?
+        }
+
+        let model = Model(label1: "200.0", label2: "404.0", label3: .ok, label4: .notFound, label5: nil)
+        let encoder = LTSVEncoder()
+        let result = try encoder.encode(model)
+        let expects = "label1:200.0\tlabel2:404.0\tlabel3:200.0\tlabel4:404.0\tlabel5:"
+
+        XCTAssertEqual(result, expects)
+    }
+
+    func testLTSVEncodeFloat64BasedEnum() throws {
+
+        enum StatusCode: Float64, Codable {
+            case ok = 200.0
+            case notFound = 404.0
+        }
+
+        struct Model: Codable, Equatable {
+            let label1: String
+            let label2: String
+            let label3: StatusCode
+            let label4: StatusCode
+            let label5: StatusCode?
+        }
+
+        let model = Model(label1: "200.0", label2: "404.0", label3: .ok, label4: .notFound, label5: nil)
+        let encoder = LTSVEncoder()
+        let result = try encoder.encode(model)
+        let expects = "label1:200.0\tlabel2:404.0\tlabel3:200.0\tlabel4:404.0\tlabel5:"
+
+        XCTAssertEqual(result, expects)
+    }
 }
 
 
