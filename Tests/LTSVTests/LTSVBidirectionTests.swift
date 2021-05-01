@@ -8,8 +8,6 @@ final class LTSVBidirectionTests: XCTestCase {
             let label2: String
         }
 
-        // let string = "label1:value1\tlabel2:value2"
-
         let model = Model(label1: "value1", label2: "value2")
 
         let encoder = LTSVEncoder()
@@ -28,9 +26,6 @@ final class LTSVBidirectionTests: XCTestCase {
             let label1: String
             let label2: String
         }
-
-        // let string = "label1:value1\tlabel2:value2\nlabel1:value3\tlabel2:value4"
-
 
         let models = [
             Model(label1: "value1", label2: "value2"),
