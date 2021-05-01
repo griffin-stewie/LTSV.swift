@@ -105,6 +105,33 @@ final class LTSVBidirectionTests: XCTestCase {
         XCTAssertEqual(models, decodedModels)
     }
 
+    func testLTSVBidirectionalRowsSupoortFloatingPointFamily() throws {
+        struct Model: Codable, Equatable {
+            let float: Float
+            let floatOptional: Float?
+            let floatOptionalNil: Float?
+            let float32: Float32
+            let float32Optional: Float32?
+            let float32OptionalNil: Float32?
+            let float64: Float64
+            let float64Optional: Float64?
+            let float64OptionalNil: Float64?
+            let double64: Double
+            let doubleOptional: Double?
+            let doubleOptionalNil: Double?
+        }
+
+        let model = Model(float: 1.0, floatOptional: 1.0, floatOptionalNil: nil, float32: 1.0, float32Optional: 1.0, float32OptionalNil: nil, float64: 1.0, float64Optional: 1.0, float64OptionalNil: nil, double64: 1.0, doubleOptional: 1.0, doubleOptionalNil: nil)
+
+        let encoder = LTSVEncoder()
+        let result = try encoder.encode(model)
+
+        let decoder = LTSVDecoder()
+        let decodedModel = try decoder.decode(Model.self, from: result)
+
+        XCTAssertEqual(model, decodedModel)
+    }
+
     func testLTSVBidirectionalDateDefferedDateStrategy() throws {
         struct Model: Codable, Equatable {
             let label1: Date

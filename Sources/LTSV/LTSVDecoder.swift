@@ -276,11 +276,67 @@ private struct LTSVKeyedDecodingContainer<Key: CodingKey>: KeyedDecodingContaine
     }
 
     func decode(_ type: Double.Type, forKey key: Key) throws -> Double {
-        fatalError("not implemented")
+        guard let s = self.container[key.stringValue] else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "TODO"))
+        }
+
+        return try self.decoder.with(pushedKey: key) {
+            guard let entry = s.flatMap({$0}) else {
+                throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "Expected \(type) value but found null instead."))
+            }
+
+            guard let value = type.init(entry) else {
+                throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "Expected \(type) value but found null instead."))
+            }
+
+            return value
+        }
+    }
+
+    func decodeIfPresent(_ type: Double.Type, forKey key: Key) throws -> Double? {
+        guard let s = self.container[key.stringValue] else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "TODO"))
+        }
+
+        return self.decoder.with(pushedKey: key) {
+            guard let unwrapped = s, let value = type.init(unwrapped) else {
+                return nil
+            }
+
+            return value
+        }
     }
 
     func decode(_ type: Float.Type, forKey key: Key) throws -> Float {
-        fatalError("not implemented")
+        guard let s = self.container[key.stringValue] else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "TODO"))
+        }
+
+        return try self.decoder.with(pushedKey: key) {
+            guard let entry = s.flatMap({$0}) else {
+                throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "Expected \(type) value but found null instead."))
+            }
+
+            guard let value = type.init(entry) else {
+                throw DecodingError.valueNotFound(type, DecodingError.Context(codingPath: self.decoder.codingPath, debugDescription: "Expected \(type) value but found null instead."))
+            }
+
+            return value
+        }
+    }
+
+    func decodeIfPresent(_ type: Float.Type, forKey key: Key) throws -> Float? {
+        guard let s = self.container[key.stringValue] else {
+            throw DecodingError.keyNotFound(key, DecodingError.Context(codingPath: codingPath, debugDescription: "TODO"))
+        }
+
+        return self.decoder.with(pushedKey: key) {
+            guard let unwrapped = s, let value = type.init(unwrapped) else {
+                return nil
+            }
+
+            return value
+        }
     }
 
     func decode(_ type: Int.Type, forKey key: Key) throws -> Int {

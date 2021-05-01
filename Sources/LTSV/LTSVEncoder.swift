@@ -254,11 +254,39 @@ fileprivate struct _LTSVKeyedEncodingContainer<Key : CodingKey>  : KeyedEncoding
     }
 
     mutating func encode(_ value: Double, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    func encodeIfPresent(_ value: Double?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: Float, forKey key: Key) throws {
-        fatalError("not implemented")
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
+        defer { self.encoder.storage.push(container: dict) }
+        dict.updateValue(self.encoder.box(value), forKey: key.stringValue)
+    }
+
+    func encodeIfPresent(_ value: Float?, forKey key: Key) throws {
+        var dict = self.encoder.storage.popContainer() as! OrderedDictionary<String,String?>
+        defer { self.encoder.storage.push(container: dict) }
+
+        guard let wrapped = value else {
+            dict.updateValue(nil, forKey: key.stringValue)
+            return
+        }
+
+        dict.updateValue(self.encoder.box(wrapped), forKey: key.stringValue)
     }
 
     mutating func encode(_ value: Int, forKey key: Key) throws {
@@ -686,6 +714,8 @@ extension _LTSVEncoder {
     fileprivate func box(_ value: String) -> String { return value }
 
     fileprivate func box(_ value: Double) -> String { return String(value) }
+
+    fileprivate func box(_ value: Float) -> String { return String(value) }
 
     fileprivate func box(_ value: Bool) throws -> String {
         switch self.options.boolEncodingStrategy {

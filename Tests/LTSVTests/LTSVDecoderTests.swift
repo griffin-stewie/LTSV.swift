@@ -103,6 +103,41 @@ final class LTSVDecoderTests: XCTestCase {
         XCTAssertNil(model.uInt64Optional)
     }
 
+    func testLTSVDecodeRowsSupoortFloatingPointFamily() throws {
+        struct Model: Codable {
+            let float: Float
+            let floatOptional: Float?
+            let floatOptionalNil: Float?
+            let float32: Float32
+            let float32Optional: Float32?
+            let float32OptionalNil: Float32?
+            let float64: Float64
+            let float64Optional: Float64?
+            let float64OptionalNil: Float64?
+            let double64: Double
+            let doubleOptional: Double?
+            let doubleOptionalNil: Double?
+        }
+
+        let string = "float:1.0\tfloatOptional:1.0\tfloatOptionalNil:\tfloat32:1.0\tfloat32Optional:1.0\tfloat32OptionalNil:\tfloat64:1.0\tfloat64Optional:1.0\tfloat64OptionalNil:\tdouble64:1.0\tdoubleOptional:1.0\tdoubleOptionalNil:"
+
+        let decoder = LTSVDecoder()
+        let model = try decoder.decode(Model.self, from: string)
+
+        XCTAssertEqual(model.float, 1.0)
+        XCTAssertEqual(model.floatOptional, 1.0)
+        XCTAssertNil(model.floatOptionalNil)
+        XCTAssertEqual(model.float32, 1.0)
+        XCTAssertEqual(model.float32Optional, 1.0)
+        XCTAssertNil(model.float32OptionalNil)
+        XCTAssertEqual(model.float64, 1.0)
+        XCTAssertEqual(model.float64Optional, 1.0)
+        XCTAssertNil(model.float64OptionalNil)
+        XCTAssertEqual(model.double64, 1.0)
+        XCTAssertEqual(model.doubleOptional, 1.0)
+        XCTAssertNil(model.doubleOptionalNil)
+    }
+
     func testLTSVDecodeDateDefferedDateStrategy() throws {
         struct Model: Codable {
             let label1: Date
