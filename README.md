@@ -8,7 +8,15 @@ LTSV.swift requires Xcode 12.4 or a Swift 5.3+ toolchain with the Swift Package 
 
 ### Swift Package Manager
 
+```swift
+// dependencies
+.package(url: "https://github.com/griffin-stewie/LTSV.swift", .upToNextMinor(from: "0.1.0")),
+```
 
+```swift
+// target.dependencies
+.product(name: "LTSV", package: "LTSV.swift")
+```
 
 ### CococaPods
 
