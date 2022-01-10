@@ -10,7 +10,7 @@ import Foundation
 import OrderedCollections
 
 public struct LTSV {
-    static func parse(from string: String) -> [OrderedDictionary<String,String?>] {
+    public static func parse(from string: String) -> [OrderedDictionary<String,String?>] {
         var parsedLines: [OrderedDictionary<String,String?>] = []
         string.enumerateLines { row, _ in
             parsedLines.append(parse(row: row))
@@ -18,7 +18,7 @@ public struct LTSV {
         return parsedLines
     }
 
-    static func parse(row string: String) -> OrderedDictionary<String,String?> {
+    public static func parse(row string: String) -> OrderedDictionary<String,String?> {
         let result = string.components(separatedBy: "\t").reduce(into: OrderedDictionary<String,String?>()) { dict, compo in
             let array = compo.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: true)
             guard array.count >= 1  else {
